@@ -1,0 +1,23 @@
+{
+    "amount": 300.0,
+    "accountHolder": {
+        "name": "Sid",
+        "dob": "12/12/2002"
+    },
+    "accountNumber": 1
+}{
+    "amount": 100.0,
+    "accountHolder": {
+        "name": "Abc",
+        "dob": "06/12/2003"
+    },
+    "accountNumber": 2
+}
+
+/*
+
+1,Sid,12/12/2002,200.0
+2,Abc,12/04/2003,100.0
+3,Wer,09/09/2009,200.0
+
+*/
