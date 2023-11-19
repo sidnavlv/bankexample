@@ -1,8 +1,7 @@
-import csv
+#import csv
 import Account as AC
-import AccountHolder as AH
 import utility as ut
-import mysql.connector
+import datetime
 
 def openAccount() -> AC.Account:  
   accNme = input("Enter Account Holder Name: ")
@@ -10,8 +9,10 @@ def openAccount() -> AC.Account:
   if(ut.validateName(accNme)):
     dob = input("Enter DOB(DD/MM/YYYY): ")
     if(ut.validateDobM2(dob)):
+       dt = datetime.datetime.strptime(dob,"%d/%m/%Y")
        try:
-         a1 = AC.Account(acno=-1,dob=dob,name=accNme,amount=ut.validateAmount(float(input("Enter amount to open account: "))))
+         a1 = AC.Account(acno=-1,dob=dt,name=accNme,amount=ut.validateAmount(float(input("Enter amount to open account: "))))
+         a1.accountNumber = a1.createAccount()
          print(a1)
          return a1
        except Exception as x:
@@ -23,31 +24,20 @@ def openAccount() -> AC.Account:
     print("not valid Name")  
   return None
 
-def load(accs):
-  mydb = mysql.connector.connect(
-      host="localhost",
-      port="3306",
-      user="root",
-      password="root"
-    )
-
-  mycursor = mydb.cursor()
-  mycursor.execute("select * from bank.account")
-
-  for row in mycursor:
-   print(row)
-
-  with open('account.csv', 'r', newline='') as csvfile:
-       rowwreader = csv.reader(csvfile, delimiter=',', quotechar='"')
-       for row in rowwreader:
-        tmpnac =AC.Account(int(row[0]), row[1], row[2], float(row[3]))
-        print(tmpnac)
-        accs[int(row[0])]=tmpnac
+#with database and no cache we done need to load all accounts, therefore commenting them.
+# def load(accs):
+# #In memory cache with no eviction 
+#   with open('account.csv', 'r', newline='') as csvfile:
+#        rowwreader = csv.reader(csvfile, delimiter=',', quotechar='"')
+#        for row in rowwreader:
+#         tmpnac =AC.Account(int(row[0]), row[1], row[2], float(row[3]))
+#         print(tmpnac)
+#         accs[int(row[0])]=tmpnac
 
 inp = 0
-accs = dict() #{1, tmp}
+#accs = dict() #{1, tmp}
 
-load(accs)
+#load(accs)
 
 while inp != 4:
  inp = int(input("\n\nEnter your choice: \n 1 = Open Account \n 2 = Withdraw \n 3 = Deposit \n 4 = Exit\n"))
@@ -58,31 +48,35 @@ while inp != 4:
      if(type(tmp) != AC.Account):
       print("Unable to open account")
      else:
-      accs[tmp.accountNumber]=tmp
+      pass
    case 2:
       ano = int(input("\nEnter account no to withdraw from: "))
       amt = float(input("\nEnter amount to withdraw: "))
-      if ano in accs.keys():
-       if accs[ano].amount-amt < 20 :
+
+      acc = AC.Account.getAccountById(ano) #classmethod onlhy works with class name . method name
+      #print(acc)
+      if acc is not None:
+       if acc.amount-amt < 20 :
          print("Insufficient Funds, Unable to withdraw")
        else:
-         accs[ano].withdraw(amt) 
+         acc.withdraw(amt) 
       else:
        print("\nAccount not exist")
    case 3:
-      try:
         ano = int(input("\nEnter account no to deposit to: "))
         amt = float(input("\nEnter amount to deposit: "))
-        accs[ano].deposit(amt)   
-      except KeyError:
-        print("\nAccount not exist") 
+        acc = AC.Account.getAccountById(ano)
+        if acc is not None:
+          acc.deposit(amt)   
+        else:
+          print("\nAccount not exist") 
    case 4:
       #for key in accs:
       #  print(accs[key])
-      with open('account.csv', 'w', newline='') as csvfile:
-       for tmp in accs.values():
-           rowwriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-           rowwriter.writerow([tmp.accountNumber, tmp.accountHolder.name, tmp.accountHolder.dob, tmp.amount])
+      # with open('account.csv', 'w', newline='') as csvfile:
+      #  for tmp in accs.values():
+      #      rowwriter = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+      #      rowwriter.writerow([tmp.accountNumber, tmp.accountHolder.name, tmp.accountHolder.dob, tmp.amount])
       print("Exiting...")
       break
    case default:
